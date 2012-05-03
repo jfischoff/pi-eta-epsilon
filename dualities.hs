@@ -4,8 +4,10 @@ import Control.Monad.Trans
 import Control.Monad.Writer hiding (Product(..), Sum(..))
 import Prelude hiding (Either(..))
 
+-- | the lack of polymorphism seems restrictive
 data Type = Zero | One | Sum Type Type | Product Type Type | Negative Type | Reciprocal Type deriving (Eq, Ord, Show, Read)
 data Value = Unit | Left Value | Right Value | Tuple Value Value | Negate Value | Reciprocate Value | UnificationVariable Int Type deriving (Eq, Ord, Show, Read)
+-- | don't you need both associates (R/L)?
 data IsoBase
 	= IdentityS Type | CommutativeS Type Type | AssociativeS Type Type Type
 	| IdentityP Type | CommutativeP Type Type | AssociativeP Type Type Type
