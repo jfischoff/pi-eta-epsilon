@@ -35,7 +35,7 @@ table   = [
             [binary "+" Sum AssocLeft]
           ]
       
-binary  name fun assoc = Infix (do{ reservedOp name; return fun }) assoc
+binary  name fun  = Infix (do{ reservedOp name; return fun })
 prefix  name fun       = Prefix (do{ reservedOp name; return fun })
 
 

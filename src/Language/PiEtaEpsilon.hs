@@ -26,9 +26,4 @@ import Language.PiEtaEpsilon.Interactive.Env
 import Language.PiEtaEpsilon.Interactive.Shell
 import Language.PiEtaEpsilon.Interactive.StatementParser
 import Language.PiEtaEpsilon.Interactive.Version
-
-import Control.Monad.Error.Class   -- to make type signatures easier to read
-import Control.Unification.Types   -- to make type signatures easier to read
-import Control.Unification.IntVar  -- to make type signatures easier to read
-
 import Language.PiEtaEpsilon.Pretty.Class

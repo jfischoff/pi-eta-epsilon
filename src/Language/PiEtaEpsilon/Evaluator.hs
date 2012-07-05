@@ -115,7 +115,7 @@ transform6 f f' v = newVariable >>= \v' -> transform5 (f v') (f' v') v
 transform7 f f' v = newVariable >>= \v' -> transform6 (f v') (f' v') v
 
 tripleL, tripleR :: Particle a => a -> a -> a -> a
-tripleL v1 v2 v3 = tuple (tuple v1 v2) v3
+tripleL v1 v2    = tuple (tuple v1 v2)       -- v3 removed by eta reduction
 tripleR v1 v2 v3 = tuple v1 (tuple v2 v3)
 
 initialize :: Term -> UValue -> MachineState

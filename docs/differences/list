@@ -1,0 +1,35 @@
+differing:
+
+CF.hs
+GetCF.hs
+TypeChecker.hs
+Utils.hs
+
+
+Only in (new) LBNF:
+
+CFto*.hs
+Grammar.hs
+Runtime.hs
+
+Only in (old):
+
+AbsBNF.hs
+ParBNF.hs
+PrintBNF.hs
+SkelBNF.hs
+TestBNF.hs
+LexBNF.hs
+
+Alex.hs
+ErrM.hs
+Main.hs
+MultiView.hs
+
+BNF.cf
+
+formats
+layout
+
+regexMinus.hs
+

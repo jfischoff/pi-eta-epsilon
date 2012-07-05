@@ -1,5 +1,6 @@
-{-# LANGUAGE NoMonomorphismRestriction, MultiParamTypeClasses, TypeSynonymInstances, 
-    FunctionalDependencies, FlexibleInstances, TemplateHaskell, QuasiQuotes #-}
+{-# LANGUAGE NoMonomorphismRestriction, MultiParamTypeClasses,
+  TypeSynonymInstances, FunctionalDependencies, FlexibleInstances #-}
+
 module Language.PiEtaEpsilon.Parser.Classes where
 
 class To a b | a -> b where

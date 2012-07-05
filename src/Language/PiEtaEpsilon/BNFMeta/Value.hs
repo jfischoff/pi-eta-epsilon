@@ -1,5 +1,4 @@
-{-# LANGUAGE GADTs, KindSignatures, 
-    TypeOperators, TemplateHaskell, QuasiQuotes #-}
+{-# LANGUAGE GADTs, TypeOperators, TemplateHaskell, QuasiQuotes #-}
 module Language.PiEtaEpsilon.BNFMeta.Value where
 --from bnfc-meta
 import Language.LBNF(lbnf, dumpCode, bnfc)

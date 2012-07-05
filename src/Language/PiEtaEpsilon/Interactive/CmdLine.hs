@@ -196,6 +196,9 @@ evalStmt ec st (Stmt_let name t) = setSucc ec >> return st{ cmd_binds = Map.inse
 evalStmt ec st (Stmt_empty)      = setSucc ec >> return st
 
 
+traceItNote = undefined
+
+
 evalTerm :: PeeCmdLineState -> Term -> UValue -> IO ()
 evalTerm st t v = putStrLn . ppr $ 
     topLevelWithState (cmdLineStateToMachineState st) t v

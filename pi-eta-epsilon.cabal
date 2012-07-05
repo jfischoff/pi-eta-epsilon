@@ -18,27 +18,30 @@ library
                     Language.PiEtaEpsilon.QuasiQuoter,
                     Language.PiEtaEpsilon.Syntax
   hs-source-dirs:   src
-  build-depends:    base >= 3 && < 5,
-                    ghc-prim >= 0.2 && < 0.3,
-                    logict >= 0.5 && < 0.6,
-                    mtl >= 2.0 && < 2.3,
-                    parsec >= 3.0 && < 3.2,
-                    QuickCheck >= 2.4 && < 2.5,
-                    template-haskell >= 2.6 && < 2.8,
-                    transformers >= 0.2 && < 0.4,
-                    unification-fd >= 0.7 && < 0.8,
-                    BNFC-meta == 0.3.0.2,
-                    doctest >= 0.6 && < 0.8,
-                    test-framework-quickcheck2 >= 0.2 && < 0.3,
-                    test-framework-hunit >= 0.2 && < 0.3,
-                    test-framework >= 0.6 && < 0.7,
-                    checkers >= 0.2 && < 0.4,
-                    DebugTraceHelpers >= 0.12 && < 1.0,
-                    Shellac-haskeline == 0.2.0.1,
-                    Shellac == 0.9.5.1,
-                    containers == 0.4.2.1,
-                    split == 0.1.4.2,
-                    data-default 
+  build-depends:    base                >= 3       && < 5,
+                    containers          >= 0.4.0   && < 0.6,   
+                    ghc-prim            >= 0.2     && < 0.3,
+                    logict              >= 0.5     && < 0.6,
+                    mtl                 >= 2.1     && < 2.3,
+                    transformers        >= 0.2     && < 0.4,                    
+                    parsec              >= 3.0     && < 3.2,
+                    QuickCheck          >= 2.5     && < 2.7,
+                    template-haskell    >= 2.6     && < 2.8,
+                    unification-fd      >= 0.7     && < 0.8,
+                    alex-meta           >= 0.3.0   && < 0.4,
+                    happy-meta          >= 0.2.0   && < 0.3,
+                    BNFC-meta           >= 0.3.0.3 && < 0.3.1,
+                    checkers            >= 0.2     && < 0.4,
+                    DebugTraceHelpers   >= 0.12    && < 1.0,
+                    Shellac             >= 0.9.5   && < 1.0,
+                    Shellac-haskeline   >= 0.2     && < 0.3,
+                    data-default        >= 0.5     && < 0.7,
+                    haskeline           >= 0.6.4   && < 0.7,
+                    doctest             >= 0.6     && < 0.8,
+                    split               >= 0.1.4   && < 0.2,
+                    test-framework-quickcheck2 >= 0.2.12 && < 0.3,
+                    test-framework-hunit       >= 0.2 && < 0.3,
+                    test-framework             >= 0.6 && < 0.7
 
 
 test-suite tests
@@ -46,27 +49,7 @@ test-suite tests
    type:            exitcode-stdio-1.0
    main-is:         Main.hs
    build-depends:   base >= 3 && < 5,
-                    checkers >= 0.2 && < 0.4,
-                    DebugTraceHelpers >= 0.12 && < 1.0,
-                    HUnit >= 1.2 && < 1.3,
-                    test-framework-quickcheck2 >= 0.2 && < 0.3,
-                    test-framework-hunit >= 0.2 && < 0.3,
-                    test-framework >= 0.6 && < 0.7,
-                    ghc-prim >= 0.2 && < 0.3,
-                    logict >= 0.5 && < 0.6,
-                    mtl >= 2.0 && < 2.3,
-                    parsec >= 3.0 && < 3.2,
-                    QuickCheck >= 2.4 && < 2.5,
-                    template-haskell >= 2.6 && < 2.8,
-                    transformers >= 0.2 && < 0.4,
-                    unification-fd >= 0.7 && < 0.8,
-                    BNFC-meta == 0.3.0.2,
-                    concatenative == 1.0.1,
-                    data-default,
-                    split == 0.1.4.2,
-                    Shellac-haskeline == 0.2.0.1,
-                    Shellac == 0.9.5.1,
-                    containers == 0.4.2.1
+                    BNFC-meta >= 0.3.0       && < 0.4
 
 test-suite doctests
    type:            exitcode-stdio-1.0

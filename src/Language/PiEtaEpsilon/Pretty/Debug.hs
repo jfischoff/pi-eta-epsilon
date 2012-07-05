@@ -40,8 +40,8 @@ sepBy  s l r = unwords [ppr l, s, ppr r]
 instance PPrint ()      where ppr = const ""
 instance PPrint IsoBase where ppr = show
 instance PPrint Iso     where
-	ppr (Eliminate b) = "e" ++ ppr b
-	ppr (Introduce b) = "i" ++ ppr b
+	ppr (Eliminate b) = 'e' : ppr b
+	ppr (Introduce b) = 'i' : ppr b
 
 instance PPrint Term where
 	ppr (Base iso) = ppr iso

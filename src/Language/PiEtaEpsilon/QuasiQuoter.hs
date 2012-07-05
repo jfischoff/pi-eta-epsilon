@@ -12,11 +12,11 @@ typ = QuasiQuoter quoteExprExp quoteExprPat undefined undefined
 quoteExprExp r =  do  
     loc <- location
     parsed_expr <- case parseType r of
-                    Left err  -> fail $ (show err ++ " at file " ++ loc_filename loc 
-                              ++ " at line " ++ (show $ snd $ loc_start loc) ++ 
-                              " at col " ++ (show $ snd $ loc_start loc))
+                    Left err  -> fail  (show err ++ " at file " ++ loc_filename loc 
+                              ++ " at line " ++ show ( snd $ loc_start loc) ++ 
+                              " at col " ++ show ( snd $ loc_start loc))
                     Right e   -> return e
-    dataToExpQ (const Nothing) $ parsed_expr
+    dataToExpQ (const Nothing)  parsed_expr
     
 quoteExprPat = undefined
 

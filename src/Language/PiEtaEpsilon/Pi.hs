@@ -1,5 +1,5 @@
 -- {-# OPTIONS_GHC -fglasgow-exts #-} -- 6.12.3
-{-# OPTIONS_GHC -XGADTs -XTypeOperators #-} -- 7.0.1
+{-# LANGUAGE GADTs, TypeOperators #-} -- 7.0.1
 
 -- Copyright (c) 2011, William J. Bowman, Roshan P. James, and Amr
 -- Sabry. The code is released under the MIT license.
