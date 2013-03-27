@@ -16,6 +16,7 @@ import Control.Unification
 import Control.Unification.IntVar
 import Data.Function
 import Prelude hiding (Either(..), negate)
+import qualified Prelude as P
 import GHC.Generics hiding ((:*:))
 import Data.Default
 
@@ -74,12 +75,12 @@ runPEE = runIdentity . runPEET
 
 -- unification for UValues {{{1
 instance Unifiable ValueF where
-	zipMatch  Unit               Unit              = Just  Unit
-	zipMatch (Left        a   ) (Left        b   ) = Just (Left        (a, b)         )
-	zipMatch (Right       a   ) (Right       b   ) = Just (Right       (a, b)         )
-	zipMatch (Tuple       a a') (Tuple       b b') = Just (Tuple       (a, b) (a', b'))
-	zipMatch (Negate      a   ) (Negate      b   ) = Just (Negate      (a, b)         )
-	zipMatch (Reciprocate a   ) (Reciprocate b   ) = Just (Reciprocate (a, b)         )
+	zipMatch  Unit               Unit              = Just Unit
+	zipMatch (Left        a   ) (Left        b   ) = Just (Left   $ P.Right  (a, b)         )
+	zipMatch (Right       a   ) (Right       b   ) = Just (Right  $ P.Right  (a, b)         )
+	zipMatch (Tuple       a a') (Tuple       b b') = Just (Tuple (P.Right   (a, b)) (P.Right (a', b')))
+	zipMatch (Negate      a   ) (Negate      b   ) = Just (Negate $ P.Right       (a, b)         )
+	zipMatch (Reciprocate a   ) (Reciprocate b   ) = Just (Reciprocate $ P.Right (a, b)         )
 	zipMatch _ _ = Nothing
 
 closeValue :: UValue -> Maybe Value

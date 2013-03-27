@@ -291,11 +291,11 @@ hide_unit c = TimesOneR :.: CommuteTimes :.: c :.: CommuteTimes :.: TimesOneL
 -- (0,10)
 addSub1 :: (Int, Int) :<=> (Int, Int)
 addSub1 = CommuteTimes 
-            :.: (UnfoldN :*: Id) 
-            :.: Distribute 
-            :.: (Id :+: CommuteTimes)
-            :.: Factor 
-            :.: (FoldN :*: Id) 
+      :.: (UnfoldN :*: Id) 
+      :.: Distribute 
+      :.: (Id :+: CommuteTimes)
+      :.: Factor 
+      :.: (FoldN :*: Id) 
 
 --------------------------------------------------------------------------
 -- Counter
