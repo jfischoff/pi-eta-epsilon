@@ -1,11 +1,16 @@
 -- boilerplate {{{1
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, NoMonomorphismRestriction,
-    GeneralizedNewtypeDeriving, MultiParamTypeClasses, OverlappingInstances,
-    StandaloneDeriving #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleInstances #-} 
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-} 
+{-# LANGUAGE MultiParamTypeClasses #-} 
+{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 module Language.PiEtaEpsilon.Evaluator where
-
-import Language.PiEtaEpsilon.Syntax
---import Language.PiEtaEpsilon.Pretty.Debug
+import Language.PiEtaEpsilon.Types
+import Language.PiEtaEpsilon.Grammar
 import Control.Applicative
 import Control.Monad.Error
 import Control.Monad.Logic
@@ -17,41 +22,42 @@ import Control.Unification.IntVar
 import Data.Function
 import Prelude hiding (Either(..), negate)
 import qualified Prelude as P
-import GHC.Generics hiding ((:*:))
 import Data.Default
+import Language.PiEtaEpsilon.Sugar
+
+--TODO use lenses and quasiquoter patterns
 
 -- types {{{1
 -- UValue, Context, MachineState {{{2
-type UValue = UTerm ValueF IntVar
 
-instance Default UValue where
-    def = unit
 
 data Context
-	= Box
-	| Fst  Context Term | Snd  Term Context
-	| LSum Context Term | RSum Term Context
-	| LProduct Context Term UValue | RProduct Term UValue Context
-	deriving (Show)
+   = Box
+   | Fst  Context Term | Snd  Term Context
+   | LSum Context Term | RSum Term Context
+   | LProduct Context Term UValue | RProduct Term UValue Context
+   deriving (Show)
 
-instance Default Context where
-    def = Box
+instance Default Context where 
+   def = Box
 
-data MachineState = MachineState
-	{ forward     :: Bool
-	, descending  :: Bool
-	, term        :: Term
-	, output      :: UValue
-	, context     :: Context
-	} deriving (Show)
-	
+data MachineState = MachineState { 
+     forward     :: Bool
+   , descending  :: Bool
+   , current     :: Term
+   , output      :: UValue
+   , context     :: Context
+   } deriving (Show)
+
+-- makeLenses ''MachineState
+
 instance Default MachineState where
     def = MachineState {
-              forward    = True
-        	, descending = True
-        	, term       = def
-        	, output     = def 
-        	, context    = def
+           forward    = True
+         , descending = True
+         , current    = def
+         , output     = def 
+         , context    = def
         }
 
 -- PEET {{{2
@@ -72,28 +78,6 @@ runPEET = observeAllT . evalIntBindingT . unPEET
 
 runPEE :: PEE a -> [a]
 runPEE = runIdentity . runPEET
-
--- unification for UValues {{{1
-instance Unifiable ValueF where
-	zipMatch  Unit               Unit              = Just Unit
-	zipMatch (Left        a   ) (Left        b   ) = Just (Left   $ P.Right  (a, b)         )
-	zipMatch (Right       a   ) (Right       b   ) = Just (Right  $ P.Right  (a, b)         )
-	zipMatch (Tuple       a a') (Tuple       b b') = Just (Tuple (P.Right   (a, b)) (P.Right (a', b')))
-	zipMatch (Negate      a   ) (Negate      b   ) = Just (Negate $ P.Right       (a, b)         )
-	zipMatch (Reciprocate a   ) (Reciprocate b   ) = Just (Reciprocate $ P.Right (a, b)         )
-	zipMatch _ _ = Nothing
-
-closeValue :: UValue -> Maybe Value
-closeValue (UTerm  Unit          ) = return unit
-closeValue (UTerm (Left   v     )) = left   <$> closeValue v
-closeValue (UTerm (Right  v     )) = right  <$> closeValue v
-closeValue (UTerm (Tuple  v1 v2 )) = tuple  <$> closeValue v1 <*> closeValue v2
-closeValue (UTerm (Negate v     )) = negate <$> closeValue v
-closeValue (UTerm (Reciprocate v)) = reciprocate <$> closeValue v
-closeValue _ = empty
-
-closedAndEqual :: UValue -> UValue -> Bool
-closedAndEqual = (==) `on` closeValue
 
 -- evaluation {{{1
 -- misc {{{2
@@ -123,7 +107,7 @@ initialize :: Term -> UValue -> MachineState
 initialize t v = MachineState {
 	forward = True,
 	descending = True,
-	term = t,
+	current = t,
 	output = v,
 	context = Box
 	}
@@ -134,95 +118,97 @@ isFinal _ = False
 
 -- evaluation of isomorphisms {{{2
 evalIso :: Iso -> UValue -> PEET m UValue
-evalIso (Eliminate IdentityS   ) v = transform1 right id v
-evalIso (Introduce IdentityS   ) v = transform1 id right v
-evalIso (Eliminate CommutativeS) v = transform1 left right v <|> transform1 right left v
-evalIso (Introduce CommutativeS) v = transform1 left right v <|> transform1 right left v
-evalIso (Eliminate AssociativeS) v =
-	    transform1  left           (left . left ) v
-	<|> transform1 (right . left ) (left . right) v
-	<|> transform1 (right . right)  right         v
-evalIso (Introduce AssociativeS) v =
-	    transform1 (left . left )  left           v
-	<|> transform1 (left . right) (right . left ) v
-	<|> transform1  right         (right . right) v
-evalIso (Eliminate SplitS      ) v = error "the impossible happened: stepEval passed an eta+ off to evalIso"
-evalIso (Introduce SplitS      ) v = error "the impossible happened: stepEval passed an epsilon+ off to evalIso"
-evalIso (Eliminate IdentityP   ) v = transform1 (tuple unit) id v
-evalIso (Introduce IdentityP   ) v = transform1 id (tuple unit) v
-evalIso (Eliminate CommutativeP) v = transform2 tuple (flip tuple) v
-evalIso (Introduce CommutativeP) v = transform2 tuple (flip tuple) v
-evalIso (Eliminate AssociativeP) v = transform3 tripleR tripleL v
-evalIso (Introduce AssociativeP) v = transform3 tripleL tripleR v
-evalIso (Eliminate SplitP      ) v = newVariable >>= \v' -> transform0 unit (tuple (reciprocate v') v') v
-evalIso (Introduce SplitP      ) v = newVariable >>= \v' -> transform0 (tuple (reciprocate v') v') unit v
-evalIso (Eliminate DistributiveZero) v = empty
-evalIso (Introduce DistributiveZero) v = empty
-evalIso (Eliminate DistributivePlus) v =
-	    transform2 (\v1 v3 -> tuple (left  v1) v3) (\v1 v3 -> left  (tuple v1 v3)) v
-	<|> transform2 (\v2 v3 -> tuple (right v2) v3) (\v2 v3 -> right (tuple v2 v3)) v
-evalIso (Introduce DistributivePlus) v =
-	    transform2 (\v1 v3 -> left  (tuple v1 v3)) (\v1 v3 -> tuple (left  v1) v3) v
-	<|> transform2 (\v2 v3 -> right (tuple v2 v3)) (\v2 v3 -> tuple (right v2) v3) v
+evalIso e v = case e of
+   [iso| # <=+=> |] -> transform1 right id v
+   [iso| ' <=+=> |] -> transform1 id right v
+   [iso| #  x+x  |] -> transform1 left right v 
+                   <|> transform1 right left v
+   [iso| '  x+x  |] -> transform1 left right v 
+                   <|> transform1 right left v
+   [iso| # |+|+| |] -> transform1  left           (left . left ) v
+                   <|> transform1 (right . left ) (left . right) v
+                   <|> transform1 (right . right)  right         v
+   [iso| ' |+|+| |] -> transform1 (left . left )  left           v
+                   <|> transform1 (left . right) (right . left ) v
+                   <|> transform1  right         (right . right) v
+   [iso| # -+<   |] -> error "the impossible happened: stepEval passed an eta+ off to evalIso"
+   [iso| ' -+<   |] -> error "the impossible happened: stepEval passed an epsilon+ off to evalIso"
+   [iso| # <=*=> |] -> transform1 (tuple unit) id v
+   [iso| ' <=*=> |] -> transform1 id (tuple unit) v
+   [iso| #  x*x  |] -> transform2 tuple (flip tuple) v
+   [iso| '  x*x  |] -> transform2 tuple (flip tuple) v
+   [iso| # |*|*| |] -> transform3 tripleR tripleL v
+   [iso| ' |*|*| |] -> transform3 tripleL tripleR v
+   [iso| # -*<   |] -> newVariable >>= \v' -> transform0 unit (tuple (reciprocate v') v') v
+   [iso| ' -*<   |] -> newVariable >>= \v' -> transform0 (tuple (reciprocate v') v') unit v
+   [iso| # ^0^   |] -> empty
+   [iso| ' ^0^   |] -> empty
+   [iso| # ^+^   |] -> 
+          transform2 (\v1 v3 -> tuple (left  v1) v3) (\v1 v3 -> left  (tuple v1 v3)) v
+      <|> transform2 (\v2 v3 -> tuple (right v2) v3) (\v2 v3 -> right (tuple v2 v3)) v
+   [iso| ' ^+^   |] -> 
+       transform2 (\v1 v3 -> left  (tuple v1 v3)) (\v1 v3 -> tuple (left  v1) v3) v
+   <|> transform2 (\v2 v3 -> right (tuple v2 v3)) (\v2 v3 -> tuple (right v2) v3) v
 
 -- evaluation of terms {{{2
 stepEval :: MachineState -> PEET m MachineState
-stepEval m@(MachineState { forward = True, descending = True }) = case term m of
-	Base (Eliminate SplitS) -> empty
-	Base (Introduce SplitS) -> do
+stepEval m@(MachineState { forward = True, descending = True }) = case current m of
+	[term| < # -+< |] -> empty
+	[term| < ' -+< |] -> do
 		v <-     transform1 right (left . negate) (output m)
 		     <|> transform1 (left . negate) right (output m)
 		return m { output = v, forward = False }
-	Base iso  -> do
-		v <- evalIso iso (output m)
+	[term| < [: i :] |]  -> do
+		v <- evalIso i (output m)
 		return m { descending = False, output = v }
-	Id        -> return m { descending = False }
-	t1 ::: t2 -> return m { term = t1, context = Fst (context m) t2 }
-	t1 :+: t2 -> transform1 left  (\v     -> m { term = t1, output = v , context = LSum (context m) t2        }) (output m)
-	         <|> transform1 right (\v     -> m { term = t2, output = v , context = RSum t1 (context m)        }) (output m)
-	t1 :*: t2 -> transform2 tuple (\v1 v2 -> m { term = t1, output = v1, context = LProduct (context m) t2 v2 }) (output m)
+	[term| <=>                 |] -> return m { descending = False }
+	[term| [: t1 :] ; [: t2 :] |] -> return m { current = t1, context = Fst (context m) t2 }
+	[term| [: t1 :] + [: t2 :] |] -> transform1 left  (\v     -> m { current = t1, output = v , context = LSum (context m) t2        }) (output m)
+	          <|> transform1 right (\v     -> m { current = t2, output = v , context = RSum t1 (context m)        }) (output m)
+	[term| [: t1 :] * [: t2 :] |] -> transform2 tuple (\v1 v2 -> m { current = t1, output = v1, context = LProduct (context m) t2 v2 }) (output m)
 stepEval m@(MachineState { forward = True, descending = False }) = case context m of
 	Box -> empty
-	Fst  cxt t -> return m { descending = True, term = t, context = Snd (term m) cxt }
-	Snd  t cxt -> return m { term = t ::: term m, context = cxt }
-	LSum cxt t -> return m { term = term m :+: t, output = left  (output m), context = cxt }
-	RSum t cxt -> return m { term = t :+: term m, output = right (output m), context = cxt }
-	LProduct cxt t v -> return m { descending = True, term = t, output = v, context = RProduct (term m) (output m) cxt }
-	RProduct t v cxt -> return m { term = t :*: term m, output = tuple v (output m), context = cxt }
+	Fst  cxt t -> return m { descending = True, current = t, context = Snd (current m) cxt }
+	Snd  t cxt -> return m { current = t @. current m, context = cxt }
+	LSum cxt t -> return m { current = current m @+ t, output = left  (output m), context = cxt }
+	RSum t cxt -> return m { current = t @+ current m, output = right (output m), context = cxt }
+	LProduct cxt t v -> return m { descending = True, current = t, output = v, context = RProduct (current m) (output m) cxt }
+	RProduct t v cxt -> return m { current = t @* current m, output = tuple v (output m), context = cxt }
 stepEval m@(MachineState { forward = False, descending = True }) = case context m of
 	Box -> empty
-	Fst  cxt t -> return m { term = term m ::: t, context = cxt }
-	Snd  t cxt -> return m { descending = False, term = t, context = Fst cxt (term m) }
-	LSum cxt t -> return m { term = term m :+: t, output = left  (output m), context = cxt }
-	RSum t cxt -> return m { term = t :+: term m, output = right (output m), context = cxt }
-	LProduct cxt t v -> return m { term = term m :*: t, output = tuple (output m) v, context = cxt }
-	RProduct t v cxt -> return m { descending = False, term = t, output = v, context = LProduct cxt (term m) (output m) }
-stepEval m@(MachineState { forward = False, descending = False }) = case term m of
-	Base (Eliminate SplitS) -> do
+	Fst  cxt t -> return m { current = current m @. t, context = cxt }
+	Snd  t cxt -> return m { descending = False, current = t, context = Fst cxt (current m) }
+	LSum cxt t -> return m { current = current m @+ t, output = left  (output m), context = cxt }
+	RSum t cxt -> return m { current = t @+ current m, output = right (output m), context = cxt }
+	LProduct cxt t v -> return m { current = current m @* t, output = tuple (output m) v, context = cxt }
+	RProduct t v cxt -> return m { descending = False, current = t, output = v, context = LProduct cxt (current m) (output m) }
+stepEval m@(MachineState { forward = False, descending = False }) = case current m of
+	[term| < # -+<             |] -> do
 		v <-     transform1 right (left . negate) (output m)
 		     <|> transform1 (left . negate) right (output m)
 		return m { output = v, forward = True }
-	Base (Introduce SplitS) -> empty
-	Base iso  -> do
-		v <- evalIso (adjointIso iso) (output m)
+	[term| < ' -+<             |] -> empty
+	[term| < [: i :]         |] -> do
+		v <- evalIso (adjointIso i) (output m)
 		return m { descending = True, output = v }
-	Id        -> return m { descending = True }
-	t1 ::: t2 -> return m { term = t2, context = Snd t1 (context m) }
-	t1 :+: t2 -> transform1 left  (\v     -> m { term = t1, output = v , context = LSum (context m) t2        }) (output m)
-	         <|> transform1 right (\v     -> m { term = t2, output = v , context = RSum t1 (context m)        }) (output m)
-	t1 :*: t2 -> transform2 tuple (\v1 v2 -> m { term = t2, output = v2, context = RProduct t1 v1 (context m) }) (output m)
+	[term| <=>                 |] -> return m { descending = True }
+	[term| [: t1 :] ; [: t2 :] |] -> return m { current = t2, context = Snd t1 (context m) }
+	[term| [: t1 :] + [: t2 :] |] ->  transform1 left  (\v     -> m { current = t1, output = v , context = LSum (context m) t2        }) (output m)
+	         <|> transform1 right (\v     -> m { current = t2, output = v , context = RSum t1 (context m)        }) (output m)
+	[term| [: t1 :] * [: t2 :] |] ->  transform2 tuple (\v1 v2 -> m { current = t2, output = v2, context = RProduct t1 v1 (context m) }) (output m)
 
 -- drivers {{{2
 eval :: MachineState -> PEET m MachineState
 eval m
-	| isFinal m = freeze (output m) >>= \v -> return m { output = v }
+	| isFinal m = freeze' (output m) >>= \v -> return m { output = v }
 	| otherwise = stepEval m >>= eval
-	where freeze = runIdentityT . applyBindings
-	
+	where freeze' = runIdentityT . applyBindings
+
+runEval :: MachineState -> [UValue]	
 runEval = map output . runPEE . eval	
 	
 topLevelWithState :: MachineState -> Term -> UValue -> [UValue]
-topLevelWithState m t v = runEval $ m { term = t, output = v }
+topLevelWithState m t v = runEval $ m { current = t, output = v }
 
 topLevel :: Term -> UValue -> [UValue]
 topLevel t v = runEval $ initialize t v

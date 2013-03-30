@@ -47,8 +47,6 @@ defaultBackend = haskelineBackend
 
 type Bindings = Map.Map String Term
 
-
-
 -------------------------------------------------------
 -- Define types to allow completion of let-bound names
 

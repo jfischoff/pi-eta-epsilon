@@ -30,19 +30,3 @@ pStatement input = do
                 Language.LBNF.Runtime.Ok  x -> return x
                 Bad m -> Left m
     return $ Stmt_eval (to term) (toUV value)
-{-
-pStatement :: String -> Either String Statement    
-pStatement st = case runParser statementP () "" st of
-    Right x -> Right x
-    Left  x -> Left $ show x
-
-statementP = do 
-    toParsec parseTerm 
-    toParsec parseValue
-
-toParsec p = updateParserState (updateStateWith p)
-    
-updateStateWith p (State input pos x) = State newInput newPos x where
-    newInput = undefined
-    newPos   = undefined
--}

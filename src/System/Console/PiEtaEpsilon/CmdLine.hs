@@ -32,7 +32,6 @@ import System.IO
 import System.Exit
 import System.Console.GetOpt
 import Text.ParserCombinators.Parsec (runParser)
-
 import Language.PiEtaEpsilon.Interactive.Shell
 import Language.PiEtaEpsilon.Interactive.Version
 import Language.PiEtaEpsilon.Interactive.StatementParser
