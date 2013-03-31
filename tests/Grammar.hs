@@ -36,13 +36,13 @@ case_parseTermIso_11 = Introduce AssociativeP @?= [iso| '  |*|*| |]
 
 case_parseTermTerm_12 = (TBase . Eliminate $ AssociativeS) @.
                         (TBase . Introduce $ AssociativeS)     @?=
-                        [term| < (# |+|+|) ; (< (' |+|+|)) |]
+                        [term| < # |+|+| ; < ' |+|+| |]
 case_parseTermTerm_13 = (TBase . Eliminate $ IdentityS) @*
                         (TBase . Introduce $ AssociativeS)     @?=
-                        [term| < (# <=+=>) * (< (' |+|+|)) |]
+                        [term| < # <=+=> * < ' |+|+| |]
 case_parseTermTerm_14 = (TBase . Eliminate $ IdentityS) @+
                         (TBase . Introduce $ AssociativeS)     @?= 
-                        [term| < (# <=+=>) + (< (' |+|+|)) |]
+                        [term| < # <=+=> + < ' |+|+| |]
 case_parseTermTerm_15 = (TBase . Eliminate $ AssociativeP)     @?= 
                         [term| < # |*|*| |] 
 case_parseTermTerm_16 = TId @?= [term| <=> |] 

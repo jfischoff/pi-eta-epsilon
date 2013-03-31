@@ -1,4 +1,4 @@
-module Language.PiEtaEpsilon.Interactive.Version where
+module System.Console.PiEtaEpsilon.Version where
 
 import Data.Version
 

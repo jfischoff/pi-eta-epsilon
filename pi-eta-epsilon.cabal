@@ -29,6 +29,7 @@ library
                     , unification-fd >= 0.8 && <= 0.9
                     , BNFC-meta == 0.4.*
                     , data-default 
+                    , wl-pprint-extras == 3.4.*
                     
 --  ghc-options: -Wall
 
@@ -51,3 +52,4 @@ test-suite tests
                     , test-framework-th == 0.2.*
                     , HUnit == 1.2.*
                     , test-framework-hunit == 0.3.*
+                    , wl-pprint-extras == 3.4.*

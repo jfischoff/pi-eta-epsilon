@@ -18,7 +18,7 @@
  -}
 
 
-module Language.PiEtaEpsilon.Interactive.CmdLine
+module System.Console.PiEtaEpsilon.CmdLine
 ( peeCmdLine
 ) where
 
@@ -32,14 +32,10 @@ import System.IO
 import System.Exit
 import System.Console.GetOpt
 import Text.ParserCombinators.Parsec (runParser)
-import Language.PiEtaEpsilon.Interactive.Shell
-import Language.PiEtaEpsilon.Interactive.Version
-import Language.PiEtaEpsilon.Interactive.StatementParser
-import Language.PiEtaEpsilon.Syntax hiding (Left, Right)
-import Language.PiEtaEpsilon.Evaluator
-import Language.PiEtaEpsilon.Pretty.REPL
-import Language.PiEtaEpsilon.Pretty.Class
-
+import System.Console.PiEtaEpsilon.Shell
+import System.Console.PiEtaEpsilon.Version
+import System.Console.PiEtaEpsilon.StatementParser
+import Language.PiEtaEpsilon
 
 -----------------------------------------------------------------------
 -- Main entry point for the command line tool

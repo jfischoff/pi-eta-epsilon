@@ -8,10 +8,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 module Language.PiEtaEpsilon.Types where
-import Control.Applicative
-import Control.Monad.State
-import Control.Monad.Trans
-import Control.Monad.Writer hiding (Product(..), Sum(..))
+import Control.Applicative 
 import Control.Unification
 import Data.Foldable
 import Data.Functor.Fixedpoint
@@ -25,6 +22,7 @@ import Language.PiEtaEpsilon.Grammar
 import Language.PiEtaEpsilon.Sugar
 import Data.Function
 import Control.Unification.IntVar
+import Text.PrettyPrint.Free
 
 deriving instance Generic  IsoBase
 deriving instance Typeable IsoBase
@@ -49,6 +47,26 @@ deriving instance Data     Value
 instance Default IsoBase
 instance Default Iso
 instance Default Term
+
+class PrettyPrec a where 
+    prettyPrec :: Int -> a -> Doc e
+    
+cparens :: Int -> Int -> Doc e -> Doc e
+cparens thisP otherP doc 
+    | thisP <= otherP = parens doc
+    | otherwise       = doc
+    
+instance Pretty (Fix ValueF) where
+    pretty = prettyPrec (-1)
+
+instance PrettyPrec (Fix ValueF) where
+    prettyPrec p v = case unFix v of
+        VFUnit            -> text "1"
+        VFLeft        x   -> cparens 0 p $ text "L" <+> prettyPrec 0 x
+        VFRight       x   -> cparens 0 p $ text "R" <+> prettyPrec 0 x
+        VFTuple       x y -> parens $ prettyPrec (-1) x <> comma <+> prettyPrec (-1) y
+        VFNegate      x   -> cparens 1 p $ text "-" <> prettyPrec 1 x
+        VFReciprocate x   -> cparens 1 p $ text "/" <> prettyPrec 1 x
 
 -- values and unification variables {{{2
 data ValueF t

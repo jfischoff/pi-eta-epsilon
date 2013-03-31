@@ -19,27 +19,23 @@
  -}
 
 
-module Language.PiEtaEpsilon.Interactive.Shell where
+module System.Console.PiEtaEpsilon.Shell where
 
 import Control.Monad.Trans
 import System.IO
 import Data.List (isPrefixOf)
 
-import Language.PiEtaEpsilon.Evaluator
-import Language.PiEtaEpsilon.Syntax hiding (Left, Right)
-import Language.PiEtaEpsilon.Parser.Term
-import Language.PiEtaEpsilon.Interactive.Version
+import Language.PiEtaEpsilon
+import System.Console.PiEtaEpsilon.Version
 
 import qualified Data.Map as Map
 import Text.ParserCombinators.Parsec (runParser)
 
-import Language.PiEtaEpsilon.Pretty.REPL
-import Language.PiEtaEpsilon.Pretty.Class
 import System.Console.Shell
 import System.Console.Shell.ShellMonad
 --import System.Console.Shell.Backend.Readline
 import System.Console.Shell.Backend.Haskeline
-import Language.PiEtaEpsilon.Interactive.StatementParser
+import System.Console.PiEtaEpsilon.StatementParser
 import Language.LBNF.Runtime
 import Data.Default
 
@@ -145,14 +141,14 @@ showBinding (Completable name) = do
     st <- getShellSt
     case Map.lookup name (letBindings st) of
         Nothing -> shellPutErrLn  $ concat ["'",name,"' not bound"]
-        Just t  -> shellPutInfoLn $ concat [name," = ", ppr t]
+        Just t  -> shellPutInfoLn $ concat [name," = ", printTree t]
 
 showBindings :: Sh PeeShellState ()
 showBindings = do
    st <- getShellSt
    shellPutStrLn $
      Map.foldWithKey
-       (\name t x -> concat [name," = ", ppr t,"\n",x])
+       (\name t x -> concat [name," = ", printTree t,"\n",x])
        ""
        (letBindings st)
 
@@ -190,7 +186,7 @@ evalExpr t v = getShellSt >>= \st -> eval t v st
  where
    eval t' v' st' = do
       let z = topLevelWithState (shellStateToMachineState st') t' v'
-      shellPutStrLn $ ppr z
+      shellPutStrLn $ printTree z
 
 shellStateToMachineState :: PeeShellState -> MachineState
 shellStateToMachineState (PeeShellState _ forwards _) = def {forward = forwards }
