@@ -36,6 +36,7 @@ import System.Console.PiEtaEpsilon.Shell
 import System.Console.PiEtaEpsilon.Version
 import System.Console.PiEtaEpsilon.StatementParser
 import Language.PiEtaEpsilon
+import Text.PrettyPrint.Free
 
 -----------------------------------------------------------------------
 -- Main entry point for the command line tool
@@ -192,7 +193,7 @@ evalStmt ec st (Stmt_empty)      = setSucc ec >> return st
 
 
 evalTerm :: PeeCmdLineState -> Term -> UValue -> IO ()
-evalTerm st t v = putStrLn . ppr $ 
+evalTerm st t v = putStrLn . show . pretty $ 
     topLevelWithState (cmdLineStateToMachineState st) t v
 
 cmdLineStateToMachineState = error "cmdLineStateToMachineState"

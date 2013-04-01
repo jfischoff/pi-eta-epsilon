@@ -24,30 +24,6 @@ import Data.Function
 import Control.Unification.IntVar
 import Text.PrettyPrint.Free
 
-deriving instance Generic  IsoBase
-deriving instance Typeable IsoBase
-deriving instance Data     IsoBase
-
-deriving instance Generic  Iso
-deriving instance Typeable Iso
-deriving instance Data     Iso
-
-deriving instance Generic  Term
-deriving instance Typeable Term
-deriving instance Data     Term
-
-deriving instance Generic  Typ
-deriving instance Typeable Typ
-deriving instance Data     Typ
-
-deriving instance Generic  Value
-deriving instance Typeable Value
-deriving instance Data     Value
-
-instance Default IsoBase
-instance Default Iso
-instance Default Term
-
 class PrettyPrec a where 
     prettyPrec :: Int -> a -> Doc e
     
@@ -56,18 +32,6 @@ cparens thisP otherP doc
     | thisP <= otherP = parens doc
     | otherwise       = doc
     
-instance Pretty (Fix ValueF) where
-    pretty = prettyPrec (-1)
-
-instance PrettyPrec (Fix ValueF) where
-    prettyPrec p v = case unFix v of
-        VFUnit            -> text "1"
-        VFLeft        x   -> cparens 0 p $ text "L" <+> prettyPrec 0 x
-        VFRight       x   -> cparens 0 p $ text "R" <+> prettyPrec 0 x
-        VFTuple       x y -> parens $ prettyPrec (-1) x <> comma <+> prettyPrec (-1) y
-        VFNegate      x   -> cparens 1 p $ text "-" <> prettyPrec 1 x
-        VFReciprocate x   -> cparens 1 p $ text "/" <> prettyPrec 1 x
-
 -- values and unification variables {{{2
 data ValueF t
    = VFUnit
@@ -80,6 +44,32 @@ data ValueF t
             Generic, Functor, Foldable, Traversable)
 
 type FixedValue = Fix ValueF
+
+instance Pretty FixedValue where
+    pretty = prettyPrec (-1)
+
+instance PrettyPrec FixedValue where
+    prettyPrec p v = case unFix v of
+        VFUnit            -> text "1"
+        VFLeft        x   -> cparens 0 p $ text "L" <+> prettyPrec 0 x
+        VFRight       x   -> cparens 0 p $ text "R" <+> prettyPrec 0 x
+        VFTuple       x y -> parens $ prettyPrec (-1) x <> comma <+> prettyPrec (-1) y
+        VFNegate      x   -> cparens 1 p $ text "-" <> prettyPrec 1 x
+        VFReciprocate x   -> cparens 1 p $ text "/" <> prettyPrec 1 x
+
+type UValue = UTerm ValueF IntVar
+
+instance Pretty UValue where
+   pretty = prettyPrec (-1)
+
+instance PrettyPrec UValue where
+   prettyPrec p (UTerm v) = case v of
+       VFUnit              -> text "1"
+       VFLeft        x   -> cparens 0 p $ text "L" <+> prettyPrec 0 x
+       VFRight       x   -> cparens 0 p $ text "R" <+> prettyPrec 0 x
+       VFTuple       x y -> parens $ prettyPrec (-1) x <> comma <+> prettyPrec (-1) y
+       VFNegate      x   -> cparens 1 p $ text "-" <> prettyPrec 1 x
+       VFReciprocate x   -> cparens 1 p $ text "/" <> prettyPrec 1 x
 
 -- convenience names for Values {{{1
 class Particle a where
@@ -125,8 +115,6 @@ toP v = case v of
    Fix (VFReciprocate  x  ) -> reciprocate (toP x)
    Fix VFUnit               -> unit
 
-type UValue = UTerm ValueF IntVar
-
 instance Default UValue where
     def = unit
 
@@ -167,3 +155,26 @@ closedAndEqual :: UValue -> UValue -> Bool
 closedAndEqual = (==) `on` closeValue
 
 
+deriving instance Generic  IsoBase
+deriving instance Typeable IsoBase
+deriving instance Data     IsoBase
+
+deriving instance Generic  Iso
+deriving instance Typeable Iso
+deriving instance Data     Iso
+
+deriving instance Generic  Term
+deriving instance Typeable Term
+deriving instance Data     Term
+
+deriving instance Generic  Typ
+deriving instance Typeable Typ
+deriving instance Data     Typ
+
+deriving instance Generic  Value
+deriving instance Typeable Value
+deriving instance Data     Value
+
+instance Default IsoBase
+instance Default Iso
+instance Default Term

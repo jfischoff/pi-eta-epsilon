@@ -38,6 +38,7 @@ import System.Console.Shell.Backend.Haskeline
 import System.Console.PiEtaEpsilon.StatementParser
 import Language.LBNF.Runtime
 import Data.Default
+import Text.PrettyPrint.Free
 
 defaultBackend = haskelineBackend
 
@@ -186,7 +187,7 @@ evalExpr t v = getShellSt >>= \st -> eval t v st
  where
    eval t' v' st' = do
       let z = topLevelWithState (shellStateToMachineState st') t' v'
-      shellPutStrLn $ printTree z
+      shellPutStrLn $ show $ pretty z
 
 shellStateToMachineState :: PeeShellState -> MachineState
 shellStateToMachineState (PeeShellState _ forwards _) = def {forward = forwards }
